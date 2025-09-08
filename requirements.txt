@@ -1,0 +1,30 @@
+# Core Dependencies
+boto3>=1.34.0
+requests>=2.31.0
+flask>=3.0.0
+fastapi>=0.104.0
+uvicorn>=0.24.0
+pydantic>=2.5.0
+jinja2>=3.1.0
+click>=8.1.0
+python-dotenv>=1.0.0
+
+# Development Dependencies (optional)
+pytest>=7.4.0
+pytest-cov>=4.1.0
+black>=23.0.0
+flake8>=6.0.0
+mypy>=1.7.0
+
+# Application-specific dependencies (installed on target systems)
+# These are not required for the deployment system itself
+# but are installed on deployed applications as needed:
+# flask>=3.0.0
+# django>=4.2.0
+# fastapi>=0.104.0
+# gunicorn>=21.2.0
+# uvicorn>=0.24.0
+# express (Node.js)
+# next (Node.js)
+# react (Node.js)
+# pm2 (Node.js)

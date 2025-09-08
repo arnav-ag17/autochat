@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arvo - AI-Powered Deployment</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .form-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        input, textarea, select {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .deployments-section {
+            margin-top: 30px;
+        }
+        
+        .deployment-card {
+            background: white;
+            border: 2px solid #e1e5e9;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: border-color 0.3s;
+        }
+        
+        .deployment-card:hover {
+            border-color: #667eea;
+        }
+        
+        .deployment-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .deployment-id {
+            font-weight: 600;
+            color: #667eea;
+        }
+        
+        .status {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status.running {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .status.failed {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .deployment-info {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        
+        .deployment-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 14px;
+            border-radius: 6px;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+        }
+        
+        .logs-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+        
+        .logs-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            max-width: 80%;
+            max-height: 80%;
+            overflow-y: auto;
+        }
+        
+        .logs-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .close-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        
+        .log-entry {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 0 6px 6px 0;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Arvo</h1>
+            <p>AI-Powered Application Deployment</p>
+        </div>
+        
+        <div class="content">
+            <div class="form-section">
+                <h2>Deploy Your Application</h2>
+                <form id="deployForm">
+                    <div class="form-group">
+                        <label for="instructions">Deployment Instructions</label>
+                        <textarea id="instructions" placeholder="e.g., Deploy this Flask application on AWS with load balancer and database" required></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="repo_url">Repository URL</label>
+                        <input type="url" id="repo_url" placeholder="https://github.com/username/repository" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="region">AWS Region</label>
+                        <select id="region">
+                            <option value="us-west-2">US West (Oregon)</option>
+                            <option value="us-east-1">US East (N. Virginia)</option>
+                            <option value="eu-west-1">Europe (Ireland)</option>
+                            <option value="ap-southeast-1">Asia Pacific (Singapore)</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="btn" id="deployBtn">Deploy Application</button>
+                </form>
+            </div>
+            
+            <div class="deployments-section">
+                <h2>Deployment History</h2>
+                <div id="deploymentsList">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        Loading deployments...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="logs-modal" id="logsModal">
+        <div class="logs-content">
+            <div class="logs-header">
+                <h3>Deployment Logs</h3>
+                <button class="close-btn" onclick="closeLogs()">Close</button>
+            </div>
+            <div id="logsContent"></div>
+        </div>
+    </div>
+    
+    <script>
+        let deployments = [];
+        
+        // Load deployments on page load
+        loadDeployments();
+        
+        // Form submission
+        document.getElementById('deployForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const instructions = document.getElementById('instructions').value;
+            const repo_url = document.getElementById('repo_url').value;
+            const region = document.getElementById('region').value;
+            
+            const deployBtn = document.getElementById('deployBtn');
+            deployBtn.disabled = true;
+            deployBtn.textContent = 'Deploying...';
+            
+            try {
+                const response = await fetch('/deploy', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        instructions,
+                        repo_url,
+                        region
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    alert('Deployment started successfully!');
+                    loadDeployments();
+                } else {
+                    alert('Deployment failed: ' + result.message);
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            } finally {
+                deployBtn.disabled = false;
+                deployBtn.textContent = 'Deploy Application';
+            }
+        });
+        
+        // Load deployments
+        async function loadDeployments() {
+            try {
+                const response = await fetch('/deployments');
+                const data = await response.json();
+                deployments = data.deployments;
+                
+                // Fetch full status for each deployment to get application URLs
+                for (let deployment of deployments) {
+                    try {
+                        const statusResponse = await fetch(`/status/${deployment.id}`);
+                        const statusData = await statusResponse.json();
+                        deployment.fullStatus = statusData;
+                    } catch (error) {
+                        console.error(`Error loading status for ${deployment.id}:`, error);
+                    }
+                }
+                
+                renderDeployments();
+            } catch (error) {
+                console.error('Error loading deployments:', error);
+            }
+        }
+        
+        // Render deployments
+        function renderDeployments() {
+            const container = document.getElementById('deploymentsList');
+            
+            if (deployments.length === 0) {
+                container.innerHTML = '<p>No deployments yet. Start by deploying your first application!</p>';
+                return;
+            }
+            
+            container.innerHTML = deployments.map(deployment => {
+                const appUrl = deployment.fullStatus?.result?.application_url;
+                return `
+                <div class="deployment-card">
+                    <div class="deployment-header">
+                        <span class="deployment-id">${deployment.id}</span>
+                        <span class="status ${deployment.status}">${deployment.status}</span>
+                    </div>
+                    <div class="deployment-info">
+                        <strong>Instructions:</strong> ${deployment.instructions}<br>
+                        <strong>Repository:</strong> ${deployment.repo_url}<br>
+                        <strong>Started:</strong> ${new Date(deployment.start_time * 1000).toLocaleString()}
+                        ${appUrl ? `<br><strong>🌐 Application URL:</strong> <a href="${appUrl}" target="_blank" style="color: #667eea; text-decoration: none;">${appUrl}</a>` : ''}
+                    </div>
+                    <div class="deployment-actions">
+                        <button class="btn btn-small" onclick="viewLogs('${deployment.id}')">View Logs</button>
+                        <button class="btn btn-small btn-secondary" onclick="viewStatus('${deployment.id}')">View Status</button>
+                    </div>
+                </div>
+            `;
+            }).join('');
+        }
+        
+        // View logs
+        async function viewLogs(deploymentId) {
+            try {
+                const response = await fetch(`/logs/${deploymentId}`);
+                const data = await response.json();
+                
+                const logsContent = document.getElementById('logsContent');
+                logsContent.innerHTML = data.logs.map(log => `
+                    <div class="log-entry">${log}</div>
+                `).join('');
+                
+                document.getElementById('logsModal').style.display = 'block';
+            } catch (error) {
+                alert('Error loading logs: ' + error.message);
+            }
+        }
+        
+        // View status
+        async function viewStatus(deploymentId) {
+            try {
+                const response = await fetch(`/status/${deploymentId}`);
+                const data = await response.json();
+                
+                let statusHtml = `
+                    <h3>Deployment Status: ${data.status}</h3>
+                    <p><strong>Instructions:</strong> ${data.instructions}</p>
+                    <p><strong>Repository:</strong> ${data.repo_url}</p>
+                    <p><strong>Region:</strong> ${data.region}</p>
+                `;
+                
+                if (data.result && data.result.application_url) {
+                    statusHtml += `<p><strong>Application URL:</strong> <a href="${data.result.application_url}" target="_blank">${data.result.application_url}</a></p>`;
+                }
+                
+                if (data.logs && data.logs.length > 0) {
+                    statusHtml += '<h4>Recent Logs:</h4>';
+                    statusHtml += data.logs.slice(-5).map(log => `<div class="log-entry">${log}</div>`).join('');
+                }
+                
+                alert(statusHtml);
+            } catch (error) {
+                alert('Error loading status: ' + error.message);
+            }
+        }
+        
+        // Close logs modal
+        function closeLogs() {
+            document.getElementById('logsModal').style.display = 'none';
+        }
+        
+        // Auto-refresh deployments every 10 seconds
+        setInterval(loadDeployments, 10000);
+    </script>
+</body>
+</html>

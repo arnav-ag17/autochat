@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arvo - Automated Deployment</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #2563eb;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .card h2 {
+            margin-bottom: 15px;
+            color: #374151;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .btn {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        .btn:hover {
+            background: #1d4ed8;
+        }
+
+        .btn:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        .btn-danger {
+            background: #dc2626;
+        }
+
+        .btn-danger:hover {
+            background: #b91c1c;
+        }
+
+        .btn-secondary {
+            background: #6b7280;
+        }
+
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+
+        .status.success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .status.error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+
+        .status.info {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .status.warning {
+            background: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .logs {
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+
+        .log-line {
+            margin-bottom: 2px;
+        }
+
+        .log-line.info { color: #60a5fa; }
+        .log-line.success { color: #34d399; }
+        .log-line.error { color: #f87171; }
+        .log-line.warning { color: #fbbf24; }
+
+        .url-link {
+            color: #2563eb;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+
+        .url-link:hover {
+            color: #1d4ed8;
+        }
+
+        .history {
+            margin-top: 20px;
+        }
+
+        .history-item {
+            background: #f9fafb;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .history-item .info {
+            flex: 1;
+        }
+
+        .history-item .actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #1f2937;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 4px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            z-index: 1000;
+            max-width: 400px;
+        }
+
+        .toast.error {
+            background: #dc2626;
+        }
+
+        .toast.success {
+            background: #059669;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Arvo</h1>
+            <p>Automated application deployment system</p>
+        </div>
+
+        <div class="main-content">
+            <div class="card">
+                <h2>Deploy Application</h2>
+                <form id="deployForm">
+                    <div class="form-group">
+                        <label for="instructions">Instructions</label>
+                        <textarea id="instructions" placeholder="Deploy this Flask app on AWS with a small VM in Oregon, add a custom domain api.foo.com and HTTPS; auto-destroy in 24h." required></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="repo">Repository URL or Local Path</label>
+                        <input type="text" id="repo" placeholder="https://github.com/user/repo or /path/to/local/repo" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="region">Region</label>
+                        <select id="region">
+                            <option value="us-west-2">US West (Oregon)</option>
+                            <option value="us-east-1">US East (N. Virginia)</option>
+                            <option value="eu-west-1">Europe (Ireland)</option>
+                            <option value="ap-northeast-1">Asia Pacific (Tokyo)</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="btn" id="deployBtn">Deploy</button>
+                </form>
+                
+                <div id="deployStatus" class="hidden"></div>
+            </div>
+
+            <div class="card">
+                <h2>Deployment Status</h2>
+                <div id="statusInfo" class="hidden">
+                    <div id="statusDisplay"></div>
+                    <div id="statusActions" class="hidden">
+                        <button class="btn btn-danger" id="destroyBtn">Destroy</button>
+                        <button class="btn btn-secondary" id="copyIdBtn">Copy ID</button>
+                        <button class="btn btn-secondary" id="copyUrlBtn" class="hidden">Copy URL</button>
+                    </div>
+                </div>
+                
+                <div id="noDeployment">
+                    <p>No active deployment. Start a deployment to see status here.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Live Logs</h2>
+            <div id="logsContainer" class="hidden">
+                <div style="margin-bottom: 10px;">
+                    <button class="btn btn-secondary" id="pauseLogsBtn">Pause</button>
+                    <button class="btn btn-secondary" id="clearLogsBtn">Clear</button>
+                    <button class="btn btn-secondary" id="downloadLogsBtn">Download</button>
+                </div>
+                <div id="logs" class="logs"></div>
+            </div>
+            <div id="noLogs">
+                <p>No logs available. Start a deployment to see live logs here.</p>
+            </div>
+        </div>
+
+        <div class="card history">
+            <h2>Deployment History</h2>
+            <div id="historyList">
+                <p>No deployment history yet.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const API_BASE_URL = window.API_BASE_URL || '';
+        
+        // State
+        let currentDeploymentId = null;
+        let eventSource = null;
+        let logsPaused = false;
+        let deploymentHistory = JSON.parse(localStorage.getItem('arvo_history') || '[]');
+
+        // DOM elements
+        const deployForm = document.getElementById('deployForm');
+        const deployBtn = document.getElementById('deployBtn');
+        const deployStatus = document.getElementById('deployStatus');
+        const statusInfo = document.getElementById('statusInfo');
+        const statusDisplay = document.getElementById('statusDisplay');
+        const statusActions = document.getElementById('statusActions');
+        const noDeployment = document.getElementById('noDeployment');
+        const logsContainer = document.getElementById('logsContainer');
+        const logs = document.getElementById('logs');
+        const noLogs = document.getElementById('noLogs');
+        const pauseLogsBtn = document.getElementById('pauseLogsBtn');
+        const clearLogsBtn = document.getElementById('clearLogsBtn');
+        const downloadLogsBtn = document.getElementById('downloadLogsBtn');
+        const destroyBtn = document.getElementById('destroyBtn');
+        const copyIdBtn = document.getElementById('copyIdBtn');
+        const copyUrlBtn = document.getElementById('copyUrlBtn');
+        const historyList = document.getElementById('historyList');
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            updateHistoryDisplay();
+            loadLastDeployment();
+        });
+
+        // Deploy form submission
+        deployForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const instructions = document.getElementById('instructions').value;
+            const repo = document.getElementById('repo').value;
+            const region = document.getElementById('region').value;
+            
+            deployBtn.disabled = true;
+            deployBtn.textContent = 'Deploying...';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/deploy`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        instructions,
+                        repo,
+                        overrides: { region },
+                        noninteractive: true
+                    })
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error?.message || 'Deployment failed');
+                }
+                
+                const result = await response.json();
+                currentDeploymentId = result.deployment_id;
+                
+                showStatus('success', `Deployment started: ${currentDeploymentId}`);
+                startEventStream();
+                updateStatusDisplay();
+                addToHistory(currentDeploymentId, 'deploying');
+                
+            } catch (error) {
+                showStatus('error', `Deployment failed: ${error.message}`);
+            } finally {
+                deployBtn.disabled = false;
+                deployBtn.textContent = 'Deploy';
+            }
+        });
+
+        // Event streaming
+        function startEventStream() {
+            if (eventSource) {
+                eventSource.close();
+            }
+            
+            eventSource = new EventSource(`${API_BASE_URL}/deploy/${currentDeploymentId}/events`);
+            
+            eventSource.onmessage = function(event) {
+                if (logsPaused) return;
+                
+                try {
+                    const data = JSON.parse(event.data);
+                    appendLog(data);
+                    updateStatusFromEvent(data);
+                } catch (e) {
+                    console.error('Failed to parse event:', e);
+                }
+            };
+            
+            eventSource.onerror = function() {
+                console.warn('Event stream disconnected, retrying...');
+                setTimeout(() => {
+                    if (currentDeploymentId) {
+                        startEventStream();
+                    }
+                }, 5000);
+            };
+        }
+
+        // Log management
+        function appendLog(event) {
+            if (!logsContainer.classList.contains('hidden')) {
+                const logLine = document.createElement('div');
+                logLine.className = `log-line ${getLogLevel(event.type)}`;
+                
+                const timestamp = new Date(event.timestamp || Date.now()).toLocaleTimeString();
+                const message = event.message || '';
+                
+                logLine.textContent = `[${timestamp}] ${event.type}: ${message}`;
+                logs.appendChild(logLine);
+                
+                // Auto-scroll
+                logs.scrollTop = logs.scrollHeight;
+            }
+        }
+
+        function getLogLevel(eventType) {
+            if (eventType.includes('ERROR') || eventType.includes('FAIL')) return 'error';
+            if (eventType.includes('SUCCESS') || eventType.includes('OK') || eventType.includes('DONE')) return 'success';
+            if (eventType.includes('WARNING') || eventType.includes('WARN')) return 'warning';
+            return 'info';
+        }
+
+        // Status management
+        async function updateStatusDisplay() {
+            if (!currentDeploymentId) return;
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/deploy/${currentDeploymentId}/status`);
+                if (!response.ok) throw new Error('Status check failed');
+                
+                const status = await response.json();
+                displayStatus(status);
+                
+            } catch (error) {
+                console.error('Status update failed:', error);
+            }
+        }
+
+        function displayStatus(status) {
+            statusInfo.classList.remove('hidden');
+            noDeployment.classList.add('hidden');
+            logsContainer.classList.remove('hidden');
+            noLogs.classList.add('hidden');
+            
+            const statusClass = status.status === 'healthy' ? 'success' : 
+                              status.status === 'failed' ? 'error' : 'info';
+            
+            statusDisplay.innerHTML = `
+                <div class="status ${statusClass}">
+                    <strong>Status:</strong> ${status.status}
+                </div>
+                ${status.public_url ? `
+                    <div class="status info">
+                        <strong>Public URL:</strong> 
+                        <a href="${status.public_url}" target="_blank" class="url-link">${status.public_url}</a>
+                    </div>
+                ` : ''}
+                ${status.log_links ? `
+                    <div class="status info">
+                        <strong>Log Links:</strong>
+                        ${Object.entries(status.log_links).map(([name, url]) => 
+                            `<a href="${url}" target="_blank" class="url-link">${name}</a>`
+                        ).join(', ')}
+                    </div>
+                ` : ''}
+            `;
+            
+            statusActions.classList.remove('hidden');
+            copyUrlBtn.classList.toggle('hidden', !status.public_url);
+            
+            // Update history
+            updateHistoryItem(currentDeploymentId, status.status, status.public_url);
+        }
+
+        function updateStatusFromEvent(event) {
+            if (event.type === 'DONE_WITH_LOGS' || event.type === 'FAILURE_DETECTED') {
+                setTimeout(updateStatusDisplay, 1000);
+            }
+        }
+
+        // Actions
+        destroyBtn.addEventListener('click', async function() {
+            if (!currentDeploymentId) return;
+            
+            if (!confirm(`Are you sure you want to destroy deployment ${currentDeploymentId}?`)) {
+                return;
+            }
+            
+            destroyBtn.disabled = true;
+            destroyBtn.textContent = 'Destroying...';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/deploy/${currentDeploymentId}/destroy`, {
+                    method: 'POST'
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error?.message || 'Destroy failed');
+                }
+                
+                showStatus('success', 'Deployment destroyed');
+                stopEventStream();
+                clearStatus();
+                updateHistoryItem(currentDeploymentId, 'destroyed');
+                
+            } catch (error) {
+                showStatus('error', `Destroy failed: ${error.message}`);
+            } finally {
+                destroyBtn.disabled = false;
+                destroyBtn.textContent = 'Destroy';
+            }
+        });
+
+        copyIdBtn.addEventListener('click', function() {
+            if (currentDeploymentId) {
+                navigator.clipboard.writeText(currentDeploymentId);
+                showToast('Deployment ID copied to clipboard', 'success');
+            }
+        });
+
+        copyUrlBtn.addEventListener('click', function() {
+            const urlElement = statusDisplay.querySelector('.url-link');
+            if (urlElement) {
+                navigator.clipboard.writeText(urlElement.href);
+                showToast('URL copied to clipboard', 'success');
+            }
+        });
+
+        // Log controls
+        pauseLogsBtn.addEventListener('click', function() {
+            logsPaused = !logsPaused;
+            pauseLogsBtn.textContent = logsPaused ? 'Resume' : 'Pause';
+        });
+
+        clearLogsBtn.addEventListener('click', function() {
+            logs.innerHTML = '';
+        });
+
+        downloadLogsBtn.addEventListener('click', function() {
+            if (currentDeploymentId) {
+                const logText = logs.textContent;
+                const blob = new Blob([logText], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `arvo-logs-${currentDeploymentId}.txt`;
+                a.click();
+                URL.revokeObjectURL(url);
+            }
+        });
+
+        // History management
+        function addToHistory(deploymentId, status) {
+            const historyItem = {
+                id: deploymentId,
+                timestamp: new Date().toISOString(),
+                status: status,
+                url: null
+            };
+            
+            deploymentHistory.unshift(historyItem);
+            deploymentHistory = deploymentHistory.slice(0, 5); // Keep last 5
+            localStorage.setItem('arvo_history', JSON.stringify(deploymentHistory));
+            updateHistoryDisplay();
+        }
+
+        function updateHistoryItem(deploymentId, status, url = null) {
+            const item = deploymentHistory.find(h => h.id === deploymentId);
+            if (item) {
+                item.status = status;
+                if (url) item.url = url;
+                localStorage.setItem('arvo_history', JSON.stringify(deploymentHistory));
+                updateHistoryDisplay();
+            }
+        }
+
+        function updateHistoryDisplay() {
+            if (deploymentHistory.length === 0) {
+                historyList.innerHTML = '<p>No deployment history yet.</p>';
+                return;
+            }
+            
+            historyList.innerHTML = deploymentHistory.map(item => `
+                <div class="history-item">
+                    <div class="info">
+                        <strong>${item.id}</strong><br>
+                        <small>${new Date(item.timestamp).toLocaleString()} - ${item.status}</small>
+                        ${item.url ? `<br><a href="${item.url}" target="_blank" class="url-link">${item.url}</a>` : ''}
+                    </div>
+                    <div class="actions">
+                        <button class="btn btn-secondary" onclick="loadDeployment('${item.id}')">Load</button>
+                        <button class="btn btn-secondary" onclick="copyToClipboard('${item.id}')">Copy ID</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function loadDeployment(deploymentId) {
+            currentDeploymentId = deploymentId;
+            startEventStream();
+            updateStatusDisplay();
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text);
+            showToast('Copied to clipboard', 'success');
+        }
+
+        function loadLastDeployment() {
+            if (deploymentHistory.length > 0) {
+                const lastDeployment = deploymentHistory[0];
+                if (lastDeployment.status === 'deploying' || lastDeployment.status === 'healthy') {
+                    loadDeployment(lastDeployment.id);
+                }
+            }
+        }
+
+        // Utility functions
+        function showStatus(type, message) {
+            deployStatus.className = `status ${type}`;
+            deployStatus.textContent = message;
+            deployStatus.classList.remove('hidden');
+            
+            setTimeout(() => {
+                deployStatus.classList.add('hidden');
+            }, 5000);
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                document.body.removeChild(toast);
+            }, 3000);
+        }
+
+        function stopEventStream() {
+            if (eventSource) {
+                eventSource.close();
+                eventSource = null;
+            }
+        }
+
+        function clearStatus() {
+            currentDeploymentId = null;
+            statusInfo.classList.add('hidden');
+            noDeployment.classList.remove('hidden');
+            logsContainer.classList.add('hidden');
+            noLogs.classList.remove('hidden');
+            logs.innerHTML = '';
+        }
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', function() {
+            stopEventStream();
+        });
+    </script>
+</body>
+</html>
