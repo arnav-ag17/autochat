@@ -400,6 +400,6 @@ For support, please open an issue in the GitHub repository or contact the develo
 
 **GitHub Repository:** https://github.com/arnav-ag17/autochat
 
-**Demo Video:** [Link to your Loom video]
+**Demo Video:** https://www.loom.com/share/55c0b88e3e6b4fac9fb0e33b043da9e3?sid=cb8f0f22-e3c6-426f-af8d-6179bbd7b3b7
 
 **Dependencies:** See [DEPENDENCIES.md](DEPENDENCIES.md) for a complete list of all sources and dependencies used.
