@@ -66,7 +66,7 @@ class OpenRouterNLP:
     """OpenRouter API integration with Claude 4.1 Opus Max for deployment requirements extraction."""
     
     def __init__(self):
-        self.api_key = "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"
+        self.api_key = os.getenv("OPENROUTER_API_KEY")
         self.base_url = "https://openrouter.ai/api/v1"
         self.model = "anthropic/claude-3-5-sonnet-20241022"  # Claude 4.1 Opus Max equivalent
         self.timeout = 30

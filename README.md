@@ -398,7 +398,7 @@ For support, please open an issue in the GitHub repository or contact the develo
 
 ---
 
-**GitHub Repository:** https://github.com/your-username/arvo
+**GitHub Repository:** https://github.com/arnav-ag17/autochat
 
 **Demo Video:** [Link to your Loom video]
 
